@@ -1,0 +1,22 @@
+{
+  "name": "math_gateway",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/cauldyclark15/math_gateway.git",
+  "author": "joseliecast <joselie@laguro.com>",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.5.5",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2",
+    "prettier": "^2.0.2"
+  },
+  "scripts": {
+    "start": "node ./index.js",
+    "dev": "nodemon ./index.js"
+  }
+}
