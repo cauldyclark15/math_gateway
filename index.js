@@ -29,14 +29,7 @@ const publishToQueue = async (queueName, data) => {
   return null;
 };
 
-process.on('exit', (code) => {
-  if (localChannel) {
-    localChannel.close();
-  }
-  console.log(`Closing rabbitmq channel`);
-});
-
-app.post('/multiply', async (req, res, next) => {
+app.post('/solve', async (req, res, next) => {
   const {
     payload
   } = req.body;
@@ -45,69 +38,7 @@ app.post('/multiply', async (req, res, next) => {
   });
 
   try {
-    await publishToQueue('multiplication', payload);
-
-    res.json({
-      message: queueResponse ? 'sent' : 'failed',
-    });
-    next();
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-app.post('/divide', async (req, res, next) => {
-  const {
-    payload
-  } = req.body;
-  console.log({
-    payload,
-  });
-
-  try {
-    const queueResponse = await publishToQueue('division', payload);
-
-    res.json({
-      message: queueResponse ? 'sent' : 'failed',
-    });
-    next();
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-app.post('/add', async (req, res, next) => {
-  const {
-    payload
-  } = req.body;
-  console.log({
-    payload,
-  });
-
-  try {
-    await publishToQueue('addition', payload);
-
-    res.json({
-      message: queueResponse ? 'sent' : 'failed',
-    });
-    next();
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-app.post('/subtract', async (req, res, next) => {
-  const {
-    queueName,
-    payload
-  } = req.body;
-  console.log({
-    queueName,
-    payload,
-  });
-
-  try {
-    await publishToQueue('subtraction', payload);
+    const queueResponse = await publishToQueue('question', payload);
 
     res.json({
       message: queueResponse ? 'sent' : 'failed',
@@ -137,55 +68,13 @@ wss.on('connection', function (ws, request) {
   ws.send('hello fcc tarlac')
 
   localChannel.consume(
-    'sum',
+    'answer',
     function (msg) {
       console.log('.....');
       console.log('Message:', msg.content.toString());
 
       ws.send(JSON.stringify({
-        sum: msg.content.toString()
-      }));
-    }, {
-      noAck: true,
-    }
-  );
-
-  localChannel.consume(
-    'quotient',
-    function (msg) {
-      console.log('.....');
-      console.log('Message:', msg.content.toString());
-
-      ws.send(JSON.stringify({
-        quotient: msg.content.toString()
-      }));
-    }, {
-      noAck: true,
-    }
-  );
-
-  localChannel.consume(
-    'difference',
-    function (msg) {
-      console.log('.....');
-      console.log('Message:', msg.content.toString());
-
-      ws.send(JSON.stringify({
-        quotient: msg.content.toString()
-      }));
-    }, {
-      noAck: true,
-    }
-  );
-
-  localChannel.consume(
-    'product',
-    function (msg) {
-      console.log('.....');
-      console.log('Message:', msg.content.toString());
-
-      ws.send(JSON.stringify({
-        quotient: msg.content.toString()
+        answer: msg.content.toString()
       }));
     }, {
       noAck: true,

@@ -9,7 +9,7 @@
 
 <body>
   <script>
-    const mySocket = new WebSocket('wss://sheltered-falls-30931.herokuapp.com/', ['json']);
+    const mySocket = new WebSocket('ws://localhost:8080/', ['json']);
     mySocket.onmessage = function (event) {
       console.log({
         data: event.data,
