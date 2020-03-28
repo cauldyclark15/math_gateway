@@ -4,11 +4,19 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require('http');
 const WebSocket = require('ws');
+const session = require('express-session')
 
 const app = express();
 
+const sessionParser = session({
+  saveUninitialized: false,
+  secret: 'aaa',
+  resave: false
+});
+
 app.use(cors());
 app.use(bodyParser.json());
+app.use(sessionParser);
 
 const CONN_URL =
   'amqp://szfhfngd:a5kKGzXCpV8bAdDIb3dGflSSWbxus4I0@cougar.rmq.cloudamqp.com/szfhfngd';
@@ -65,7 +73,7 @@ server.on('upgrade', function (request, socket, head) {
 });
 
 wss.on('connection', function (ws, request) {
-  ws.send('hello fcc tarlac')
+  ws.send('')
 
   localChannel.consume(
     'answer',
@@ -73,11 +81,7 @@ wss.on('connection', function (ws, request) {
       console.log('.....');
       console.log('Message:', msg.content.toString());
 
-      ws.send(JSON.stringify({
-        answer: msg.content.toString()
-      }));
-    }, {
-      noAck: true,
+      ws.send(msg.content.toString());
     }
   );
 })
