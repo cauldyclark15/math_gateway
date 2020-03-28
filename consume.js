@@ -1,16 +1,11 @@
 const amqp = require('amqplib/callback_api');
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-
-const app = express();
 
 const CONN_URL =
   'amqp://szfhfngd:a5kKGzXCpV8bAdDIb3dGflSSWbxus4I0@cougar.rmq.cloudamqp.com/szfhfngd';
 amqp.connect(CONN_URL, function (err, conn) {
   conn.createChannel(function (err, ch) {
     ch.consume(
-      'addition',
+      'multiplication',
       async function (msg) {
         const publishToQueue = async (queueName, data) => {
           if (ch) {

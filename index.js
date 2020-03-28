@@ -2,9 +2,9 @@ const amqp = require('amqplib/callback_api');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const http = require('http');
 const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8080 });
 const app = express();
 
 app.use(cors());
@@ -14,34 +14,19 @@ const CONN_URL =
   'amqp://szfhfngd:a5kKGzXCpV8bAdDIb3dGflSSWbxus4I0@cougar.rmq.cloudamqp.com/szfhfngd';
 
 let localChannel = null;
-
-wss.on('connection', function connection(ws) {
-  ws.send('test1');
-
-  amqp.connect(CONN_URL, function (err, conn) {
-    conn.createChannel(function (err, channel) {
-      localChannel = channel;
-
-      localChannel.consume(
-        'sum',
-        function (msg) {
-          console.log('.....');
-          console.log('Message:', msg.content.toString());
-
-          ws.send(msg.content.toString());
-        },
-        {
-          noAck: true,
-        }
-      );
-    });
+amqp.connect(CONN_URL, function (err, conn) {
+  conn.createChannel(function (err, channel) {
+    localChannel = channel;
   });
 });
 
+
 const publishToQueue = async (queueName, data) => {
   if (localChannel) {
-    localChannel.sendToQueue(queueName, new Buffer(data));
+    return localChannel.sendToQueue(queueName, new Buffer(data));
   }
+
+  return null;
 };
 
 process.on('exit', (code) => {
@@ -52,7 +37,9 @@ process.on('exit', (code) => {
 });
 
 app.post('/multiply', async (req, res, next) => {
-  const { payload } = req.body;
+  const {
+    payload
+  } = req.body;
   console.log({
     payload,
   });
@@ -61,7 +48,7 @@ app.post('/multiply', async (req, res, next) => {
     await publishToQueue('multiplication', payload);
 
     res.json({
-      message: 'sent',
+      message: queueResponse ? 'sent' : 'failed',
     });
     next();
   } catch (error) {
@@ -70,16 +57,18 @@ app.post('/multiply', async (req, res, next) => {
 });
 
 app.post('/divide', async (req, res, next) => {
-  const { payload } = req.body;
+  const {
+    payload
+  } = req.body;
   console.log({
     payload,
   });
 
   try {
-    await publishToQueue('division', payload);
+    const queueResponse = await publishToQueue('division', payload);
 
     res.json({
-      message: 'sent',
+      message: queueResponse ? 'sent' : 'failed',
     });
     next();
   } catch (error) {
@@ -88,7 +77,9 @@ app.post('/divide', async (req, res, next) => {
 });
 
 app.post('/add', async (req, res, next) => {
-  const { payload } = req.body;
+  const {
+    payload
+  } = req.body;
   console.log({
     payload,
   });
@@ -97,7 +88,7 @@ app.post('/add', async (req, res, next) => {
     await publishToQueue('addition', payload);
 
     res.json({
-      message: 'sent',
+      message: queueResponse ? 'sent' : 'failed',
     });
     next();
   } catch (error) {
@@ -106,7 +97,10 @@ app.post('/add', async (req, res, next) => {
 });
 
 app.post('/subtract', async (req, res, next) => {
-  const { queueName, payload } = req.body;
+  const {
+    queueName,
+    payload
+  } = req.body;
   console.log({
     queueName,
     payload,
@@ -116,7 +110,7 @@ app.post('/subtract', async (req, res, next) => {
     await publishToQueue('subtraction', payload);
 
     res.json({
-      message: 'sent',
+      message: queueResponse ? 'sent' : 'failed',
     });
     next();
   } catch (error) {
@@ -124,6 +118,81 @@ app.post('/subtract', async (req, res, next) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('app running at port 3000');
+const server = http.createServer(app);
+const wss = new WebSocket.Server({
+  clientTracking: false,
+  noServer: true
+});
+
+server.on('upgrade', function (request, socket, head) {
+  console.log('Parsing session from request...');
+
+  wss.handleUpgrade(request, socket, head, function (ws) {
+    wss.emit('connection', ws, request);
+    console.log('Sessioned parsed!');
+  });
+});
+
+wss.on('connection', function (ws, request) {
+  ws.send('hello fcc tarlac')
+
+  localChannel.consume(
+    'sum',
+    function (msg) {
+      console.log('.....');
+      console.log('Message:', msg.content.toString());
+
+      ws.send(JSON.stringify({
+        sum: msg.content.toString()
+      }));
+    }, {
+      noAck: true,
+    }
+  );
+
+  localChannel.consume(
+    'quotient',
+    function (msg) {
+      console.log('.....');
+      console.log('Message:', msg.content.toString());
+
+      ws.send(JSON.stringify({
+        quotient: msg.content.toString()
+      }));
+    }, {
+      noAck: true,
+    }
+  );
+
+  localChannel.consume(
+    'difference',
+    function (msg) {
+      console.log('.....');
+      console.log('Message:', msg.content.toString());
+
+      ws.send(JSON.stringify({
+        quotient: msg.content.toString()
+      }));
+    }, {
+      noAck: true,
+    }
+  );
+
+  localChannel.consume(
+    'product',
+    function (msg) {
+      console.log('.....');
+      console.log('Message:', msg.content.toString());
+
+      ws.send(JSON.stringify({
+        quotient: msg.content.toString()
+      }));
+    }, {
+      noAck: true,
+    }
+  );
+})
+
+server.listen(process.env.PORT || 8080, () => {
+  console.log('app running at port 8080');
 });
