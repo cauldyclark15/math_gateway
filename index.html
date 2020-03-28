@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
 
-  <body>
-    <script>
-      const mySocket = new WebSocket('ws://localhost:8080', ['json']);
-      mySocket.onmessage = function (event) {
-        console.log({
-          data: event.data,
-        });
-      };
-    </script>
-    <h1>Websocket sample consumer</h1>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    const mySocket = new WebSocket('wss://sheltered-falls-30931.herokuapp.com/', ['json']);
+    mySocket.onmessage = function (event) {
+      console.log({
+        data: event.data,
+      });
+    };
+  </script>
+  <h1>Websocket sample consumer</h1>
+</body>
+
 </html>
